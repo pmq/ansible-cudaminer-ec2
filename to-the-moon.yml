@@ -1,0 +1,59 @@
+---
+# such ansible, much automation, wow
+
+- hosts: ec2
+  vars:
+    pool_url: stratum+tcp://stratum2.dogechain.info:3333
+    worker_name: myname
+    worker_passwd: mypasswd
+
+  remote_user: ec2-user
+
+  tasks:
+  - name: upgrade all packages
+    yum: name=* state=latest
+    sudo: True
+
+  - name: install all the core packages needed
+    yum: pkg={{item}} state=installed
+    with_items:
+      - binutils
+      - git
+      - gcc
+      - gcc-c++
+      - kernel-devel
+      - libcurl-devel
+      - openssl-devel
+      - automake
+    sudo: True
+
+  - name: install some useful extra packages
+    yum: pkg={{item}} state=installed
+    with_items:
+      - emacs
+      - htop
+    sudo: True
+
+  - name: download the CUDA SDK from nVidia
+    get_url: url=http://developer.download.nvidia.com/compute/cuda/5_5/rel/installers/cuda_5.5.22_linux_64.run dest=~/cuda_5.5.22_linux_64.run sha256sum=b997e1dbe95704e0e806e0cedc5fd370a385351fef565c7bae0917baf3a29aa4
+
+  - name: run the nVidia CUDA installer
+    command: sh cuda_5.5.22_linux_64.run -driver -toolkit -silent chdir=~ creates=/usr/local/cuda-5.5
+    sudo: True
+
+  - name: clone the CudaMiner repo
+    git: repo=https://github.com/cbuchner1/CudaMiner dest=~/CudaMiner
+
+  - name: run autogen.sh on CudaMiner
+    command: ./autogen.sh chdir=~/CudaMiner
+
+  - name: run configure on CudaMiner
+    command: ./configure chdir=~/CudaMiner creates=~/CudaMiner/Makefile
+
+  - name: make CudaMiner
+    command: /usr/bin/env PATH=$PATH:/usr/local/cuda-5.5/bin make chdir=~/CudaMiner
+    	     creates=~/CudaMiner/cudaminer
+
+  - name: run CudaMiner, to the Moon!
+    command: screen /usr/bin/env LD_LIBRARY_PATH=/usr/local/cuda-5.5/lib64 
+    	     ./cudaminer -o {{pool_url}} -u {{worker_name}} -p {{worker_passwd}} chdir=~/CudaMiner
