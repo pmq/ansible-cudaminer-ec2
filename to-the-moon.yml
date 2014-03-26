@@ -45,15 +45,13 @@
     git: repo=https://github.com/cbuchner1/CudaMiner dest=~/CudaMiner
 
   - name: run autogen.sh on CudaMiner
-    command: ./autogen.sh chdir=~/CudaMiner
+    command: sh autogen.sh chdir=~/CudaMiner
 
   - name: run configure on CudaMiner
     command: ./configure chdir=~/CudaMiner creates=~/CudaMiner/Makefile
 
   - name: make CudaMiner
-    command: /usr/bin/env PATH=$PATH:/usr/local/cuda-5.5/bin make chdir=~/CudaMiner
-    	     creates=~/CudaMiner/cudaminer
+    command: /usr/bin/env PATH=$PATH:/usr/local/cuda-5.5/bin make chdir=~/CudaMiner creates=~/CudaMiner/cudaminer
 
   - name: run CudaMiner, to the Moon!
-    command: screen /usr/bin/env LD_LIBRARY_PATH=/usr/local/cuda-5.5/lib64 
-    	     ./cudaminer -o {{pool_url}} -u {{worker_name}} -p {{worker_passwd}} chdir=~/CudaMiner
+    command: screen /usr/bin/env LD_LIBRARY_PATH=/usr/local/cuda-5.5/lib64 ./cudaminer -o {{pool_url}} -u {{worker_name}} -p {{worker_passwd}} chdir=~/CudaMiner
