@@ -10,7 +10,7 @@ ANSIBLE_INVENTORY=hosts
 # ANSIBLE_INVENTORY=ec2.py
 
 usage() {
-    echo 'ping|mine'
+    echo "Usage: $0 [ping | mine]"
     exit 0
 }
 
@@ -19,10 +19,21 @@ ping() {
 	 --private-key=${SSH_IDENTITY} ${VERBOSE} -m ping
 }
 
-install() {
+run() {
     ansible-playbook -i ${ANSIBLE_INVENTORY} -u ${AWS_USER} \
 	 --private-key=${SSH_IDENTITY} ${VERBOSE} to-the-moon.yml
 }
 
-# ping
-install
+if [ $# -lt 1 ]
+then
+    usage
+fi
+
+case "$1" in
+    ping) ping
+	;;
+    run) run
+	;;
+    *) usage
+	;;
+esac
